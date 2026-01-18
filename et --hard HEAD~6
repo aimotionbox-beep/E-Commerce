@@ -1,0 +1,11 @@
+[33m6c2908e[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m)[m .git ignored reverted back
+[33mac20ab0[m git ignore
+[33mc095ae3[m git commit -m "Remove env file from repo"
+[33m0259d5b[m reverting back
+[33m662a93b[m removing rezorepay method from orderController.js
+[33m24c7af5[m adding secret key for stripe
+[33m40b485b[m[33m ([m[1;31morigin/main[m[33m)[m chaning .env for frontend and admin for changing backend URL.
+[33m3946490[m package-lock.json file deleted and reinstalled.
+[33m8b3df30[m bcrypt changes to bcryptjs
+[33mff45d45[m chaning in .env file and mongodb.js file.
+[33mfd39d6f[m Initial commit: admin, frontend, backend
