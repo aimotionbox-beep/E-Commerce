@@ -1,4 +1,8 @@
 //POST /api/user/signup
+import validator from "validator";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import User from "../models/userModel.js";
 
 exports.signup = async (req, res) => {
   const { name, email, password } = req.body;
@@ -52,15 +56,13 @@ exports.login = async (req, res) => {
   const { email, password } = req.body;
 
   const user = await User.findOne({ email });
-  if (!user)
-    return res.json({ success: false, message: "User not found" });
+  if (!user) return res.json({ success: false, message: "User not found" });
 
   if (!user.isVerified)
     return res.json({ success: false, message: "Email not verified" });
 
   const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch)
-    return res.json({ success: false, message: "Wrong password" });
+  if (!isMatch) return res.json({ success: false, message: "Wrong password" });
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "7d",
@@ -75,8 +77,7 @@ exports.forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   const user = await User.findOne({ email });
-  if (!user)
-    return res.json({ success: false, message: "User not found" });
+  if (!user) return res.json({ success: false, message: "User not found" });
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -121,19 +122,20 @@ exports.verifyForgotOTP = async (req, res) => {
 
 // Route for admin login
 const adminLogin = async (req, res) => {
-    try {
-        
-        const {email,password} = req.body
+  try {
+    const { email, password } = req.body;
 
-        if (email === process.env.ADMIN_EMAIL && password === process.env.ADMIN_PASSWORD) {
-            const token = jwt.sign(email+password,process.env.JWT_SECRET);
-            res.json({success:true,token})
-        } else {
-            res.json({success:false,message:"Invalid credentials"})
-        }
-
-    } catch (error) {
-        console.log(error);
-        res.json({ success: false, message: error.message })
+    if (
+      email === process.env.ADMIN_EMAIL &&
+      password === process.env.ADMIN_PASSWORD
+    ) {
+      const token = jwt.sign(email + password, process.env.JWT_SECRET);
+      res.json({ success: true, token });
+    } else {
+      res.json({ success: false, message: "Invalid credentials" });
     }
-}
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: error.message });
+  }
+};
