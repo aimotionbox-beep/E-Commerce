@@ -18,10 +18,13 @@ app.use(
     origin: [
       "http://localhost:5173",
       "http://localhost:3000",
-      "https://style-x-admin.onrender.com",
+      "https://style-x-p0qu.onrender.com", // ✅ MAIN FRONTEND
+      "https://style-x-admin.onrender.com", // admin panel (if any)
     ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
-  })
+  }),
 );
 
 // ✅ 2. Body parser
@@ -46,14 +49,10 @@ if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "frontend", "dist")));
 
   app.get("*", (req, res) => {
-    res.sendFile(
-      path.join(__dirname, "frontend", "dist", "index.html")
-    );
+    res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
   });
 }
 
 // ===================================================
 
-app.listen(port, () =>
-  console.log("Server started on PORT : " + port)
-);
+app.listen(port, () => console.log("Server started on PORT : " + port));
