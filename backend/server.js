@@ -1,58 +1,31 @@
-import express from "express";
-import cors from "cors";
-import "dotenv/config";
-import connectDB from "./config/mongodb.js";
-import connectCloudinary from "./config/cloudinary.js";
-import userRouter from "./routes/userRoute.js";
-import productRouter from "./routes/productRoute.js";
-import cartRouter from "./routes/cartRoute.js";
-import orderRouter from "./routes/orderRoute.js";
-import path from "path";
+import express from 'express'
+import cors from 'cors'
+import 'dotenv/config'
+import connectDB from './config/mongodb.js'
+import connectCloudinary from './config/cloudinary.js'
+import userRouter from './routes/userRoute.js'
+import productRouter from './routes/productRoute.js'
+import cartRouter from './routes/cartRoute.js'
+import orderRouter from './routes/orderRoute.js'
 
-const app = express();
-const port = process.env.PORT || 4000;
+// App Config
+const app = express()
+const port = process.env.PORT || 4000
+connectDB()
+connectCloudinary()
 
-// ✅ 1. CORS
-app.use(
-  cors({
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "https://style-x-p0qu.onrender.com", // ✅ MAIN FRONTEND
-      "https://style-x-admin.onrender.com", // admin panel (if any)
-    ],
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
-  }),
-);
+// middlewares
+app.use(express.json())
+app.use(cors())
 
-// ✅ 2. Body parser
-app.use(express.json());
+// api endpoints
+app.use('/api/user',userRouter)
+app.use('/api/product',productRouter)
+app.use('/api/cart',cartRouter)
+app.use('/api/order',orderRouter)
 
-// ✅ DB & cloud
-connectDB();
-connectCloudinary();
+app.get('/',(req,res)=>{
+    res.send("API Working")
+})
 
-// ✅ 3. API routes
-app.use("/api/user", userRouter);
-app.use("/api/product", productRouter);
-app.use("/api/cart", cartRouter);
-app.use("/api/order", orderRouter);
-
-// ===================================================
-// ✅ 4. Serve frontend ONLY in production
-// ===================================================
-if (process.env.NODE_ENV === "production") {
-  const __dirname = path.resolve();
-
-  app.use(express.static(path.join(__dirname, "frontend", "dist")));
-
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "frontend", "dist", "index.html"));
-  });
-}
-
-// ===================================================
-
-app.listen(port, () => console.log("Server started on PORT : " + port));
+app.listen(port, ()=> console.log('Server started on PORT : '+ port))
