@@ -1,10 +1,14 @@
 import express from 'express';
-import { loginUser,registerUser,adminLogin } from '../controllers/userController.js';
+import { verifySignupOTP,signup,login,forgotPassword,verifyForgotOTP,adminLogin } from '../controllers/Login.js';
 
 const userRouter = express.Router();
 
-userRouter.post('/register',registerUser)
-userRouter.post('/login',loginUser)
+userRouter.post('/signup',signup)
+userRouter.post('/verifySignupOTP',verifySignupOTP)
+userRouter.post('/login',login)
+userRouter.post('/forgotPassword',forgotPassword)
+userRouter.post('/verifyForgotOTP',verifyForgotOTP)
 userRouter.post('/admin',adminLogin)
+
 
 export default userRouter;
