@@ -12,7 +12,7 @@ import path from "path";
 const app = express();
 const port = process.env.PORT || 4000;
 
-// ✅ 1. CORS FIRST
+// ✅ 1. CORS
 app.use(
   cors({
     origin: [
@@ -27,24 +27,32 @@ app.use(
 // ✅ 2. Body parser
 app.use(express.json());
 
-// DB & cloud
+// ✅ DB & cloud
 connectDB();
 connectCloudinary();
 
-// ✅ 3. API routes (VERY IMPORTANT)
+// ✅ 3. API routes
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 
-// ✅ 4. Serve frontend (production only)
-const __dirname = path.resolve();
-app.use(express.static(path.join(__dirname, "frontend/dist")));
+// ===================================================
+// ✅ 4. Serve frontend ONLY in production
+// ===================================================
+if (process.env.NODE_ENV === "production") {
+  const __dirname = path.resolve();
 
-// ✅ 5. SPA fallback (LAST)
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
-});
+  app.use(express.static(path.join(__dirname, "frontend", "dist")));
+
+  app.get("*", (req, res) => {
+    res.sendFile(
+      path.join(__dirname, "frontend", "dist", "index.html")
+    );
+  });
+}
+
+// ===================================================
 
 app.listen(port, () =>
   console.log("Server started on PORT : " + port)
