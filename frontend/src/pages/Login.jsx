@@ -57,7 +57,7 @@ const Login = () => {
       /* -------- VERIFY OTP -------- */
       if (currentState === "Verify OTP") {
         const res = await axios.post(
-          backendUrl + "/api/user/verifySignupOTP",
+          backendUrl + "/api/user/verify-signup-otp",
           { email, otp }
         );
 

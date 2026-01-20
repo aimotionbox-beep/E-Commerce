@@ -34,7 +34,7 @@ const ForgotPassword = () => {
       /* -------- VERIFY OTP -------- */
       if (step === 2) {
         const res = await axios.post(
-          backendUrl + "/api/user/verifyForgotOTP",
+          backendUrl + "/api/user/verify-forgot-otp",
           { email, otp }
         );
 
