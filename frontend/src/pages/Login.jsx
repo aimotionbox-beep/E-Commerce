@@ -2,25 +2,26 @@ import React, { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../context/ShopContext";
 import axios from "axios";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
 
 const Login = () => {
-   
   const { token, setToken, navigate, backendUrl } =
     useContext(ShopContext);
 
-  const [currentState, setCurrentState] = useState("Login"); 
+  const [currentState, setCurrentState] = useState("Login");
   // Login | Sign Up | Verify OTP
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-
+  const [loading, setLoading] = useState(false);
 
   /* ================= SUBMIT HANDLER ================= */
   const onSubmitHandler = async (e) => {
     e.preventDefault();
+
+    if (loading) return; // 🔒 prevent double click
+    setLoading(true);
 
     try {
       /* -------- LOGIN -------- */
@@ -39,15 +40,15 @@ const Login = () => {
         }
       }
 
-      /* -------- SIGNUP -------- */
-      if (currentState === "Sign Up") {
+      /* -------- SIGN UP -------- */
+      else if (currentState === "Sign Up") {
         const res = await axios.post(
           backendUrl + "/api/user/signup",
           { name, email, password }
         );
 
         if (res.data.success) {
-          toast.success("OTP sent to email");
+          toast.success(res.data.message || "OTP sent to email");
           setCurrentState("Verify OTP");
         } else {
           toast.error(res.data.message);
@@ -55,7 +56,7 @@ const Login = () => {
       }
 
       /* -------- VERIFY OTP -------- */
-      if (currentState === "Verify OTP") {
+      else if (currentState === "Verify OTP") {
         const res = await axios.post(
           backendUrl + "/api/user/verify-signup-otp",
           { email, otp }
@@ -70,8 +71,10 @@ const Login = () => {
         }
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       toast.error("Something went wrong");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -143,7 +146,13 @@ const Login = () => {
       {/* SWITCH LINKS */}
       {currentState !== "Verify OTP" && (
         <div className="w-full flex justify-between text-sm mt-[-8px]">
-          <p   onClick={() => navigate("/forgot-password")} className="cursor-pointer">Forgot your password?</p>
+          <p
+            onClick={() => navigate("/forgot-password")}
+            className="cursor-pointer"
+          >
+            Forgot your password?
+          </p>
+
           {currentState === "Login" ? (
             <p
               onClick={() => setCurrentState("Sign Up")}
@@ -162,8 +171,15 @@ const Login = () => {
         </div>
       )}
 
-      <button className="bg-black text-white font-light px-8 py-2 mt-4">
-        {currentState === "Login"
+      <button
+        disabled={loading}
+        className={`bg-black text-white font-light px-8 py-2 mt-4 ${
+          loading ? "opacity-60 cursor-not-allowed" : ""
+        }`}
+      >
+        {loading
+          ? "Please wait..."
+          : currentState === "Login"
           ? "Sign In"
           : currentState === "Sign Up"
           ? "Sign Up"
