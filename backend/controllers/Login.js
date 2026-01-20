@@ -2,6 +2,8 @@ import validator from "validator";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
+import sendEmail from "../utils/sendEmail.js";
+
 
 /* ================== TOKEN HELPER ================== */
 const createToken = (id) => {
@@ -47,7 +49,19 @@ const signup = async (req, res) => {
       isVerified: false,
     });
 
-    console.log("Signup OTP:", otp); // replace with email service
+
+
+await sendEmail(
+  email,
+  "Verify your email",
+  `
+  <h2>Email Verification</h2>
+  <p>Your OTP is:</p>
+  <h1>${otp}</h1>
+  <p>Valid for 5 minutes</p>
+  `
+);
+
 
     res.json({ success: true, message: "OTP sent to email" });
   } catch (error) {
@@ -155,7 +169,17 @@ const verifyForgotOTP = async (req, res) => {
 
     await user.save();
 
-    console.log("New Password:", newPassword); // email this to user
+    await sendEmail(
+  email,
+  "Password Reset",
+  `
+  <h2>Password Reset</h2>
+  <p>Your new password:</p>
+  <h1>${newPassword}</h1>
+  <p>Please change it after login</p>
+  `
+);
+
 
     const token = createToken(user._id);
 
