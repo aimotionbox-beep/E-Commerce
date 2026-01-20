@@ -14,7 +14,7 @@ const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // validation
+    // basic validation
     if (!name || !email || !password) {
       return res.json({ success: false, message: "All fields are required" });
     }
@@ -47,10 +47,10 @@ const signup = async (req, res) => {
       isVerified: false,
     });
 
-    // ✅ RESPOND IMMEDIATELY (IMPORTANT)
+    /* ✅ SEND RESPONSE FIRST (CRITICAL) */
     res.json({ success: true, message: "OTP sent to email" });
 
-    // ✅ SEND EMAIL IN BACKGROUND (DO NOT AWAIT)
+    /* ✅ SEND EMAIL ASYNC (NO await) */
     sendEmail(
       email,
       "Verify your email",
@@ -65,7 +65,7 @@ const signup = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Signup error:", error);
     res.json({ success: false, message: "Server error" });
   }
 };
@@ -76,7 +76,6 @@ const verifySignupOTP = async (req, res) => {
     const { email, otp } = req.body;
 
     const user = await User.findOne({ email });
-
     if (!user || user.otp !== otp || user.otpExpires < Date.now()) {
       return res.json({ success: false, message: "Invalid or expired OTP" });
     }
@@ -88,9 +87,10 @@ const verifySignupOTP = async (req, res) => {
 
     const token = createToken(user._id);
     res.json({ success: true, token });
+
   } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
+    console.error("Verify OTP error:", error);
+    res.json({ success: false, message: "Server error" });
   }
 };
 
@@ -115,9 +115,10 @@ const login = async (req, res) => {
 
     const token = createToken(user._id);
     res.json({ success: true, token });
+
   } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
+    console.error("Login error:", error);
+    res.json({ success: false, message: "Server error" });
   }
 };
 
@@ -136,10 +137,10 @@ const forgotPassword = async (req, res) => {
     user.otpExpires = Date.now() + 5 * 60 * 1000;
     await user.save();
 
-    // ✅ respond first
+    /* ✅ respond immediately */
     res.json({ success: true, message: "OTP sent to email" });
 
-    // ✅ email async
+    /* ✅ async email */
     sendEmail(
       email,
       "Password Reset OTP",
@@ -154,7 +155,7 @@ const forgotPassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error(error);
+    console.error("Forgot password error:", error);
     res.json({ success: false, message: "Server error" });
   }
 };
@@ -189,12 +190,12 @@ const verifyForgotOTP = async (req, res) => {
         <p>Please change it after login</p>
       `
     ).catch((err) => {
-      console.error("Reset email failed:", err.message);
+      console.error("Reset password email failed:", err.message);
     });
 
   } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
+    console.error("Verify forgot OTP error:", error);
+    res.json({ success: false, message: "Server error" });
   }
 };
 
@@ -212,14 +213,14 @@ const adminLogin = async (req, res) => {
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );
-
       res.json({ success: true, token });
     } else {
       res.json({ success: false, message: "Invalid credentials" });
     }
+
   } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: error.message });
+    console.error("Admin login error:", error);
+    res.json({ success: false, message: "Server error" });
   }
 };
 
