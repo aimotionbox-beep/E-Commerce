@@ -142,12 +142,25 @@ const forgotPassword = async (req, res) => {
     user.otpExpires = Date.now() + 5 * 60 * 1000;
     await user.save();
 
-    console.log("Forgot OTP:", otp); // replace with email service
+    // ✅ SEND OTP VIA EMAIL
+    await sendEmail(
+      email,
+      "Password Reset OTP",
+      `
+        <div style="font-family: Arial;">
+          <h2>Password Reset Request</h2>
+          <p>Your OTP is:</p>
+          <h1 style="letter-spacing: 3px;">${otp}</h1>
+          <p>This OTP is valid for <b>5 minutes</b>.</p>
+          <p>If you did not request this, ignore this email.</p>
+        </div>
+      `
+    );
 
     res.json({ success: true, message: "OTP sent to email" });
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: error.message });
+    res.json({ success: false, message: "Failed to send OTP" });
   }
 };
 
