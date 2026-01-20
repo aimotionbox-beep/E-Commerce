@@ -4,25 +4,21 @@ import jwt from "jsonwebtoken";
 import User from "../models/userModel.js";
 import sendEmail from "../utils/sendEmail.js";
 
-
 /* ================== TOKEN HELPER ================== */
 const createToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
 /* ================== USER SIGNUP ================== */
-// POST /api/user/signup
 const signup = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // check existing user
-    const exists = await User.findOne({ email });
-    if (exists) {
-      return res.json({ success: false, message: "User already exists" });
+    // validation
+    if (!name || !email || !password) {
+      return res.json({ success: false, message: "All fields are required" });
     }
 
-    // validate email & password
     if (!validator.isEmail(email)) {
       return res.json({ success: false, message: "Invalid email address" });
     }
@@ -34,10 +30,12 @@ const signup = async (req, res) => {
       });
     }
 
-    // hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const exists = await User.findOne({ email });
+    if (exists) {
+      return res.json({ success: false, message: "User already exists" });
+    }
 
-    // generate OTP
+    const hashedPassword = await bcrypt.hash(password, 10);
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     await User.create({
@@ -49,29 +47,30 @@ const signup = async (req, res) => {
       isVerified: false,
     });
 
-
-
-await sendEmail(
-  email,
-  "Verify your email",
-  `
-  <h2>Email Verification</h2>
-  <p>Your OTP is:</p>
-  <h1>${otp}</h1>
-  <p>Valid for 5 minutes</p>
-  `
-);
-
-
+    // ✅ RESPOND IMMEDIATELY (IMPORTANT)
     res.json({ success: true, message: "OTP sent to email" });
+
+    // ✅ SEND EMAIL IN BACKGROUND (DO NOT AWAIT)
+    sendEmail(
+      email,
+      "Verify your email",
+      `
+        <h2>Email Verification</h2>
+        <p>Your OTP is:</p>
+        <h1>${otp}</h1>
+        <p>Valid for 5 minutes</p>
+      `
+    ).catch((err) => {
+      console.error("Signup email failed:", err.message);
+    });
+
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: error.message });
+    console.error(error);
+    res.json({ success: false, message: "Server error" });
   }
 };
 
 /* ================== VERIFY SIGNUP OTP ================== */
-// POST /api/user/verify-signup-otp
 const verifySignupOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -88,16 +87,14 @@ const verifySignupOTP = async (req, res) => {
     await user.save();
 
     const token = createToken(user._id);
-
     res.json({ success: true, token });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.json({ success: false, message: error.message });
   }
 };
 
 /* ================== USER LOGIN ================== */
-// POST /api/user/login
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -117,16 +114,14 @@ const login = async (req, res) => {
     }
 
     const token = createToken(user._id);
-
     res.json({ success: true, token });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.json({ success: false, message: error.message });
   }
 };
 
 /* ================== FORGOT PASSWORD ================== */
-// POST /api/user/forgot-password
 const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -137,35 +132,34 @@ const forgotPassword = async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
     user.otp = otp;
     user.otpExpires = Date.now() + 5 * 60 * 1000;
     await user.save();
 
-    // ✅ SEND OTP VIA EMAIL
-    await sendEmail(
+    // ✅ respond first
+    res.json({ success: true, message: "OTP sent to email" });
+
+    // ✅ email async
+    sendEmail(
       email,
       "Password Reset OTP",
       `
-        <div style="font-family: Arial;">
-          <h2>Password Reset Request</h2>
-          <p>Your OTP is:</p>
-          <h1 style="letter-spacing: 3px;">${otp}</h1>
-          <p>This OTP is valid for <b>5 minutes</b>.</p>
-          <p>If you did not request this, ignore this email.</p>
-        </div>
+        <h2>Password Reset</h2>
+        <p>Your OTP:</p>
+        <h1>${otp}</h1>
+        <p>Valid for 5 minutes</p>
       `
-    );
+    ).catch((err) => {
+      console.error("Forgot password email failed:", err.message);
+    });
 
-    res.json({ success: true, message: "OTP sent to email" });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "Failed to send OTP" });
+    console.error(error);
+    res.json({ success: false, message: "Server error" });
   }
 };
 
 /* ================== VERIFY FORGOT OTP ================== */
-// POST /api/user/verify-forgot-otp
 const verifyForgotOTP = async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -179,30 +173,27 @@ const verifyForgotOTP = async (req, res) => {
     user.password = await bcrypt.hash(newPassword, 10);
     user.otp = undefined;
     user.otpExpires = undefined;
-
     await user.save();
-
-    await sendEmail(
-  email,
-  "Password Reset",
-  `
-  <h2>Password Reset</h2>
-  <p>Your new password:</p>
-  <h1>${newPassword}</h1>
-  <p>Please change it after login</p>
-  `
-);
-
-
-    const token = createToken(user._id);
 
     res.json({
       success: true,
-      token,
       message: "New password sent to email",
     });
+
+    sendEmail(
+      email,
+      "Password Reset",
+      `
+        <h2>New Password</h2>
+        <h1>${newPassword}</h1>
+        <p>Please change it after login</p>
+      `
+    ).catch((err) => {
+      console.error("Reset email failed:", err.message);
+    });
+
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.json({ success: false, message: error.message });
   }
 };
@@ -227,12 +218,11 @@ const adminLogin = async (req, res) => {
       res.json({ success: false, message: "Invalid credentials" });
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.json({ success: false, message: error.message });
   }
 };
 
-/* ================== EXPORTS ================== */
 export {
   signup,
   verifySignupOTP,
