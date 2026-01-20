@@ -8,7 +8,7 @@ userRouter.post('/verifySignupOTP',verifySignupOTP)
 userRouter.post('/login',login)
 userRouter.post('/forgotPassword',forgotPassword)
 userRouter.post('/verifyForgotOTP',verifyForgotOTP)
-//userRouter.post('/admin',adminLogin)
+userRouter.post('/admin',adminLogin)
 
 
 export default userRouter;
