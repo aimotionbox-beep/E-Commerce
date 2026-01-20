@@ -1,12 +1,12 @@
-import express from 'express';
-import cors from 'cors';
-import 'dotenv/config';
-import connectDB from './config/mongodb.js';
-import connectCloudinary from './config/cloudinary.js';
-import userRouter from './routes/userRoute.js';
-import productRouter from './routes/productRoute.js';
-import cartRouter from './routes/cartRoute.js';
-import orderRouter from './routes/orderRoute.js';
+import express from "express";
+import cors from "cors";
+import "dotenv/config";
+import connectDB from "./config/mongodb.js";
+import connectCloudinary from "./config/cloudinary.js";
+import userRouter from "./routes/userRoute.js";
+import productRouter from "./routes/productRoute.js";
+import cartRouter from "./routes/cartRoute.js";
+import orderRouter from "./routes/orderRoute.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -14,40 +14,55 @@ const port = process.env.PORT || 4000;
 connectDB();
 connectCloudinary();
 
-const allowedOrigins = [
-  'https://style-x-p0qu.onrender.com',
-  'http://localhost:3000',
-  'http://localhost:5173',
-];
+/* =========================
+   MANUAL CORS (RENDER SAFE)
+========================= */
 
-// middlewares
+app.use((req, res, next) => {
+  const allowedOrigins = [
+    "https://style-x-p0qu.onrender.com",
+    "http://localhost:3000",
+    "http://localhost:5173",
+  ];
+
+  const origin = req.headers.origin;
+
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+  }
+
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,POST,PUT,DELETE,OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+
+  // ✅ HANDLE PREFLIGHT HERE
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(204);
+  }
+
+  next();
+});
+
+/* ========================= */
+
 app.use(express.json());
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
-
-app.options('*', cors());
-
 // routes
-app.use('/api/user', userRouter);
-app.use('/api/product', productRouter);
-app.use('/api/cart', cartRouter);
-app.use('/api/order', orderRouter);
+app.use("/api/user", userRouter);
+app.use("/api/product", productRouter);
+app.use("/api/cart", cartRouter);
+app.use("/api/order", orderRouter);
 
-app.get('/', (req, res) => {
-  res.send('API Working');
+app.get("/", (req, res) => {
+  res.send("API Working");
 });
 
 app.listen(port, () =>
-  console.log(`Server started on PORT : ${port}`)
+  console.log("Server started on PORT : " + port)
 );
