@@ -21,6 +21,7 @@ connectCloudinary();
 app.use((req, res, next) => {
   const allowedOrigins = [
     "https://style-x-p0qu.onrender.com",
+    "https://style-x-admin.onrender.com/",
     "http://localhost:3000",
     "http://localhost:5173",
   ];
