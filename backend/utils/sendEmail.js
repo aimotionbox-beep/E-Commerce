@@ -1,27 +1,22 @@
-import Brevo from "@getbrevo/brevo";
+import { Resend } from "resend";
 
-const apiInstance = new Brevo.TransactionalEmailsApi();
-
-apiInstance.setApiKey(
-  Brevo.TransactionalEmailsApiApiKeys.apiKey,
-  process.env.BREVO_API_KEY
-);
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (to, subject, html) => {
   try {
-    await apiInstance.sendTransacEmail({
+    await resend.emails.send({
+      from: process.env.EMAIL_FROM, // StyleX <onboarding@resend.dev>
+      to,
       subject,
-      htmlContent: html,
-      sender: {
-        name: "StyleX",
-        email: "aimotionbox@gmail.com", // must be verified in Brevo
-      },
-      to: [{ email: to }],
+      html,
     });
 
-    console.log("EMAIL SENT VIA BREVO API");
+    console.log("EMAIL SENT VIA RESEND");
   } catch (error) {
-    console.error("BREVO API ERROR:", error.message);
+    console.error(
+      "RESEND EMAIL ERROR:",
+      error?.message || error
+    );
   }
 };
 
