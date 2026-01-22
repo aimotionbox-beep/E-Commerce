@@ -11,6 +11,7 @@ import orderRouter from "./routes/orderRoute.js";
 const app = express();
 const port = process.env.PORT || 4000;
 
+// Connect services
 connectDB();
 connectCloudinary();
 
@@ -20,7 +21,8 @@ connectCloudinary();
 
 app.use((req, res, next) => {
   const allowedOrigins = [
-    "https://style-x-p0qu.onrender.com",
+    "https://style-x-p0qu.onrender.com",    // User frontend
+    "https://style-x-admin.onrender.com",   // Admin frontend ✅
     "http://localhost:3000",
     "http://localhost:5173",
   ];
@@ -41,7 +43,7 @@ app.use((req, res, next) => {
     "Content-Type, Authorization"
   );
 
-  // ✅ HANDLE PREFLIGHT HERE
+  // ✅ Handle preflight requests
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
@@ -53,16 +55,18 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-// routes
+// API routes
 app.use("/api/user", userRouter);
 app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 
+// Health check
 app.get("/", (req, res) => {
   res.send("API Working");
 });
 
-app.listen(port, () =>
-  console.log("Server started on PORT : " + port)
-);
+// Start server
+app.listen(port, () => {
+  console.log("Server started on PORT : " + port);
+});
