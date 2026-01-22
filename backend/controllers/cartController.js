@@ -54,22 +54,40 @@ const updateCart = async (req,res) => {
 
 
 // get user cart data
-const getUserCart = async (req,res) => {
+const getUserCart = async (req, res) => {
+  try {
+    // ✅ user comes from JWT middleware
+    const userId = req.user._id;
 
-    try {
-        
-        const { userId } = req.body
-        
-        const userData = await userModel.findById(userId)
-        let cartData = await userData.cartData;
+    const userData = await userModel.findById(userId);
 
-        res.json({ success: true, cartData })
-
-    } catch (error) {
-        console.log(error)
-        res.json({ success: false, message: error.message })
+    // ✅ safety check
+    if (!userData) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
     }
 
-}
+    // ✅ ensure cartData exists
+    if (!userData.cartData) {
+      userData.cartData = {};
+      await userData.save();
+    }
+
+    res.json({
+      success: true,
+      cartData: userData.cartData,
+    });
+
+  } catch (error) {
+    console.log("getUserCart error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};
+
 
 export { addToCart, updateCart, getUserCart }
