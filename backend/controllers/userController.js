@@ -92,13 +92,11 @@ const adminLogin = async (req, res) => {
       const token = jwt.sign(
         {
           email,
-          role: "admin",   // ✅ role-based auth
-          type: "admin"    // ✅ explicit admin token
+          role: "admin",
+          type: "admin",
         },
         process.env.JWT_SECRET,
-        {
-          expiresIn: "1d", // ✅ expiry
-        }
+        { expiresIn: "1d" }
       );
 
       return res.json({ success: true, token });
@@ -116,6 +114,7 @@ const adminLogin = async (req, res) => {
     });
   }
 };
+
 
 
 

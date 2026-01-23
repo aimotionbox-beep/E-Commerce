@@ -53,7 +53,7 @@ const Orders = ({ token }) => {
       toast.error(response.data.message);
     }
   };
-
+console.log("ADMIN DECODED:", decoded);
   useEffect(() => {
     fetchAllOrders();
   }, [token]);
