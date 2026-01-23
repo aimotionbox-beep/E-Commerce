@@ -1,7 +1,8 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useEffect, useState, useCallback } from "react";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import axios from 'axios'
+import PropTypes from 'prop-types';
 
 export const ShopContext = createContext();
 
@@ -63,7 +64,7 @@ const ShopContextProvider = (props) => {
                         totalCount += cartItems[items][item];
                     }
                 } catch (error) {
-
+                    console.error(error);
                 }
             }
         }
@@ -101,14 +102,14 @@ const ShopContextProvider = (props) => {
                         totalAmount += itemInfo.price * cartItems[items][item];
                     }
                 } catch (error) {
-
+                    console.error(error);
                 }
             }
         }
         return totalAmount;
     }
 
-    const getProductsData = async () => {
+    const getProductsData = useCallback(async () => {
         try {
 
             const response = await axios.get(backendUrl + '/api/product/list')
@@ -122,12 +123,12 @@ const ShopContextProvider = (props) => {
             console.log(error)
             toast.error(error.message)
         }
-    }
+    }, [backendUrl])
 
-    const getUserCart = async ( token ) => {
+    const getUserCart = useCallback(async ( token ) => {
         try {
             
-            const response = await axios.get(backendUrl + '/api/cart/get',{},{headers:{token}})
+            const response = await axios.get(backendUrl + '/api/cart/get', { headers: { token } })
             if (response.data.success) {
                 setCartItems(response.data.cartData)
             }
@@ -135,21 +136,23 @@ const ShopContextProvider = (props) => {
             console.log(error)
             toast.error(error.message)
         }
-    }
+    }, [backendUrl])
 
     useEffect(() => {
         getProductsData()
-    }, [])
+    }, [getProductsData])
 
     useEffect(() => {
         if (!token && localStorage.getItem('token')) {
             setToken(localStorage.getItem('token'))
-            getUserCart(localStorage.getItem('token'))
         }
+    }, [token])
+
+    useEffect(() => {
         if (token) {
             getUserCart(token)
         }
-    }, [token])
+    }, [token, getUserCart])
 
     const value = {
         products, currency, delivery_fee,
@@ -167,5 +170,9 @@ const ShopContextProvider = (props) => {
     )
 
 }
+
+ShopContextProvider.propTypes = {
+    children: PropTypes.node.isRequired,
+};
 
 export default ShopContextProvider;
