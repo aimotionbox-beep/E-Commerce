@@ -8,7 +8,7 @@ const addToCart = async (req,res) => {
         const { userId, itemId, size } = req.body
 
         const userData = await userModel.findById(userId)
-        let cartData = await userData.cartData;
+        let cartData = userData.cartData;
 
         if (cartData[itemId]) {
             if (cartData[itemId][size]) {
@@ -22,7 +22,9 @@ const addToCart = async (req,res) => {
             cartData[itemId][size] = 1
         }
 
-        await userModel.findByIdAndUpdate(userId, {cartData})
+        // Mark modified because cartData is Mixed type
+        userData.markModified('cartData');
+        await userData.save();
 
         res.json({ success: true, message: "Added To Cart" })
 
@@ -39,11 +41,13 @@ const updateCart = async (req,res) => {
         const { userId ,itemId, size, quantity } = req.body
 
         const userData = await userModel.findById(userId)
-        let cartData = await userData.cartData;
+        let cartData = userData.cartData;
 
         cartData[itemId][size] = quantity
 
-        await userModel.findByIdAndUpdate(userId, {cartData})
+        userData.markModified('cartData');
+        await userData.save();
+        
         res.json({ success: true, message: "Cart Updated" })
 
     } catch (error) {
