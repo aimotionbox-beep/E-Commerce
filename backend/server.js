@@ -61,6 +61,8 @@ app.use("/api/product", productRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 
+console.log("App Routes Initialized - Server Restarted");
+
 // Health check
 app.get("/", (req, res) => {
   res.send("API Working");

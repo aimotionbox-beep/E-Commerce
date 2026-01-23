@@ -2,6 +2,7 @@ import validator from "validator";
 import bcrypt from "bcryptjs"
 import jwt from 'jsonwebtoken'
 import userModel from "../models/userModel.js";
+import { v2 as cloudinary } from "cloudinary"
 
 
 const createToken = (id) => {
@@ -115,7 +116,68 @@ const adminLogin = async (req, res) => {
   }
 };
 
+// Route to get user profile
+const getUserProfile = async (req, res) => {
+    try {
+        const user = await userModel.findById(req.user._id).select('-password'); // Exclude password
+        
+        if (!user) {
+            return res.json({ success: false, message: 'User not found' });
+        }
 
+        res.json({ success: true, userData: user });
+    } catch (error) {
+        console.log(error);
+        res.json({ success: false, message: error.message });
+    }
+}
 
+// Route to update user profile
+const updateUserProfile = async (req, res) => {
+    try {
+        console.log("Update Profile Request Body:", req.body);
+        const { name, phone, address } = req.body;
+        const imageFile = req.file;
+        
+        if (!name || !phone) {
+            return res.json({ success: false, message: "Name and phone are required" });
+        }
 
-export { loginUser, registerUser, adminLogin }
+        const updateData = {
+            name,
+            phone,
+            address: address ? JSON.parse(address) : undefined
+        };
+
+        if (imageFile) {
+            console.log("Processing image file:", imageFile.path);
+            try {
+                // Normalize path for Windows to avoid backslash issues
+                const normalizedPath = imageFile.path.replace(/\\/g, "/");
+                const imageUpload = await cloudinary.uploader.upload(normalizedPath, { resource_type: 'image' });
+                updateData.image = imageUpload.secure_url;
+                console.log("Image upload success:", updateData.image);
+            } catch (error) {
+                console.log("Image upload failed:", error);
+                // We do NOT return error here, we proceed to save other data
+            }
+        }
+
+        // Remove undefined fields
+        Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
+
+        const user = await userModel.findByIdAndUpdate(req.user._id, updateData, { new: true }).select('-password');
+
+        if (!user) {
+            return res.json({ success: false, message: 'User not found' });
+        }
+
+        res.json({ success: true, message: "Profile Updated", userData: user });
+
+    } catch (error) {
+        console.log("Update Profile Error:", error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+export { loginUser, registerUser, adminLogin, getUserProfile, updateUserProfile }

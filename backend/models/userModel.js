@@ -37,6 +37,31 @@ const userSchema = new mongoose.Schema(
     cartData: { 
       type: Object, 
       default: {} 
+    },
+    
+    // 📞 Phone number
+    phone: { 
+        type: String, 
+        default: '' 
+    },
+
+    // 🖼️ Profile picture URL
+    image: { 
+        type: String, 
+        default: '' 
+    },
+
+    // 🏠 Address details
+    address: { 
+        type: Object, 
+        default: {
+            line1: '',
+            line2: '',
+            city: '',
+            state: '',
+            zipcode: '',
+            country: ''
+        } 
     }
   },
   { 
