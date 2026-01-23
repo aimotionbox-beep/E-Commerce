@@ -41,7 +41,7 @@ const PlaceOrder = () => {
                 console.log(response)
                 try {
                     
-                    const { data } = await axios.post(backendUrl + '/api/order/verifyRazorpay',response,{headers:{token}})
+                    const { data } = await axios.post(backendUrl + '/api/order/verifyRazorpay',response,{headers:{Authorization: `Bearer ${token}`}})
                     if (data.success) {
                         navigate('/orders')
                         setCartItems({})
@@ -86,7 +86,7 @@ const PlaceOrder = () => {
 
                 // API Calls for COD
                 case 'cod':
-                    const response = await axios.post(backendUrl + '/api/order/place',orderData,{headers:{token}})
+                    const response = await axios.post(backendUrl + '/api/order/place',orderData,{headers:{Authorization: `Bearer ${token}`}})
                     if (response.data.success) {
                         setCartItems({})
                         navigate('/orders')
@@ -96,7 +96,7 @@ const PlaceOrder = () => {
                     break;
 
                 case 'stripe':
-                    const responseStripe = await axios.post(backendUrl + '/api/order/stripe',orderData,{headers:{token}})
+                    const responseStripe = await axios.post(backendUrl + '/api/order/stripe',orderData,{headers:{Authorization: `Bearer ${token}`}})
                     if (responseStripe.data.success) {
                         const {session_url} = responseStripe.data
                         window.location.replace(session_url)

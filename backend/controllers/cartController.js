@@ -57,7 +57,7 @@ const updateCart = async (req,res) => {
 const getUserCart = async (req, res) => {
   try {
     // ✅ user comes from JWT middleware
-    const userId = req.user._id;
+    const userId = req.body.userId;
 
     const userData = await userModel.findById(userId);
 
