@@ -134,50 +134,60 @@ const getUserProfile = async (req, res) => {
 
 // Route to update user profile
 const updateUserProfile = async (req, res) => {
-    try {
-        console.log("Update Profile Request Body:", req.body);
-        const { name, phone, address } = req.body;
-        const imageFile = req.file;
-        
-        if (!name || !phone) {
-            return res.json({ success: false, message: "Name and phone are required" });
-        }
+  try {
+    console.log("Update Profile Request Body:", req.body);
 
-        const updateData = {
-            name,
-            phone,
-            address: address ? JSON.parse(address) : undefined
-        };
+    const { name, phone, address } = req.body;
+    const imageFile = req.file;
 
-        if (imageFile) {
-            console.log("Processing image file:", imageFile.path);
-            try {
-                // Normalize path for Windows to avoid backslash issues
-                const normalizedPath = imageFile.path.replace(/\\/g, "/");
-                const imageUpload = await cloudinary.uploader.upload(normalizedPath, { resource_type: 'image' });
-                updateData.image = imageUpload.secure_url;
-                console.log("Image upload success:", updateData.image);
-            } catch (error) {
-                console.log("Image upload failed:", error);
-                // We do NOT return error here, we proceed to save other data
-            }
-        }
-
-        // Remove undefined fields
-        Object.keys(updateData).forEach(key => updateData[key] === undefined && delete updateData[key]);
-
-        const user = await userModel.findByIdAndUpdate(req.user._id, updateData, { new: true }).select('-password');
-
-        if (!user) {
-            return res.json({ success: false, message: 'User not found' });
-        }
-
-        res.json({ success: true, message: "Profile Updated", userData: user });
-
-    } catch (error) {
-        console.log("Update Profile Error:", error);
-        res.json({ success: false, message: error.message });
+    if (!name || !phone) {
+      return res.json({ success: false, message: "Name and phone are required" });
     }
-}
+
+    // ✅ Safe address parsing
+    let parsedAddress = undefined;
+    if (address) {
+      try {
+        parsedAddress = typeof address === "string" ? JSON.parse(address) : address;
+      } catch (e) {
+        console.log("Address parse error:", e);
+      }
+    }
+
+    const updateData = {
+      name,
+      phone,
+      address: parsedAddress
+    };
+
+    // ✅ Image upload
+    if (imageFile) {
+      try {
+        const imageUpload = await cloudinary.uploader.upload(
+          imageFile.path || imageFile.tempFilePath,
+          { resource_type: "image" }
+        );
+        updateData.image = imageUpload.secure_url;
+      } catch (error) {
+        console.log("Image upload failed:", error);
+      }
+    }
+
+    const user = await userModel
+      .findByIdAndUpdate(req.user._id, updateData, { new: true })
+      .select("-password");
+
+    if (!user) {
+      return res.json({ success: false, message: "User not found" });
+    }
+
+    res.json({ success: true, message: "Profile Updated", userData: user });
+
+  } catch (error) {
+    console.log("Update Profile Error:", error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 export { loginUser, registerUser, adminLogin, getUserProfile, updateUserProfile }

@@ -28,7 +28,7 @@ const Profile = () => {
 
     const loadUserProfile = async () => {
         try {
-            const { data } = await axios.get(backendUrl + '/api/user/profile', { headers: { token } });
+            const { data } = await axios.get(backendUrl + '/api/user/profile', { headers: { Authorization: `Bearer ${token}` } });
             if (data.success) {
                 setUserData(prev => ({ 
                     ...prev, 
@@ -58,7 +58,7 @@ const Profile = () => {
             
             image && formData.append('image', image);
 
-            const { data } = await axios.post(backendUrl + '/api/user/update-profile', formData, { headers: { token } });
+            const { data } = await axios.post(backendUrl + '/api/user/update-profile', formData, { headers: { Authorization: `Bearer ${token}` } });
 
             if (data.success) {
                 toast.success(data.message);
